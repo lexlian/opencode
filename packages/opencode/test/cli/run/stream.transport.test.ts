@@ -5,6 +5,7 @@ import type { FooterApi, FooterEvent, RunFilePart, StreamCommit } from "@/cli/cm
 
 type EventStream = Awaited<ReturnType<OpencodeClient["event"]["subscribe"]>>["stream"]
 type GlobalEventStream = Awaited<ReturnType<OpencodeClient["global"]["event"]>>["stream"]
+type GlobalPayload = GlobalEvent["payload"]
 type SdkEvent = EventStream extends AsyncGenerator<infer T, unknown, unknown> ? T : never
 type SessionMessage = NonNullable<Awaited<ReturnType<OpencodeClient["session"]["messages"]>>["data"]>[number]
 type SessionChild = NonNullable<Awaited<ReturnType<OpencodeClient["session"]["children"]>>["data"]>[number]
@@ -171,7 +172,7 @@ function globalSse(stream: GlobalEventStream) {
 function wrapGlobalStream(stream: EventStream): GlobalEventStream {
   return (async function* (): GlobalEventStream {
     for await (const event of stream) {
-      yield globalEvent(event)
+      yield globalEvent(event as GlobalPayload)
     }
     return StreamClosed
   })()
@@ -339,11 +340,11 @@ function child(id: string): SessionChild {
   }
 }
 
-function globalEvent(payload: GlobalEvent["payload"]): GlobalEvent {
+function globalEvent(payload: SdkEvent | GlobalPayload): GlobalEvent {
   return {
     directory: "/tmp",
     project: "project-1",
-    payload,
+    payload: payload as GlobalPayload,
   }
 }
 

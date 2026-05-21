@@ -8,6 +8,7 @@ import { SDKProvider } from "../../../src/cli/cmd/tui/context/sdk"
 import { useEvent } from "../../../src/cli/cmd/tui/context/event"
 
 const projectID = "proj_test"
+type EventPayload = GlobalEvent["payload"]
 
 async function wait(fn: () => boolean, timeout = 2000) {
   const start = Date.now()
@@ -17,7 +18,7 @@ async function wait(fn: () => boolean, timeout = 2000) {
   }
 }
 
-function event(payload: Event, input: { directory: string; project?: string; workspace?: string }): GlobalEvent {
+function event(payload: EventPayload, input: { directory: string; project?: string; workspace?: string }): GlobalEvent {
   return {
     directory: input.directory,
     project: input.project,
@@ -26,7 +27,7 @@ function event(payload: Event, input: { directory: string; project?: string; wor
   }
 }
 
-function vcs(branch: string): Event {
+function vcs(branch: string): EventPayload {
   return {
     id: `evt_vcs_${branch}`,
     type: "vcs.branch.updated",
@@ -36,7 +37,7 @@ function vcs(branch: string): Event {
   }
 }
 
-function update(version: string): Event {
+function update(version: string): EventPayload {
   return {
     id: `evt_update_${version}`,
     type: "installation.update-available",
@@ -129,7 +130,7 @@ describe("useEvent", () => {
 
       await wait(() => seen.length === 1)
 
-      expect(seen).toEqual([vcs("main")])
+      expect(seen).toEqual([vcs("main") as Event])
       expect(workspaces).toEqual(["ws_a"])
     } finally {
       app.renderer.destroy()
@@ -158,7 +159,7 @@ describe("useEvent", () => {
 
       await wait(() => seen.length === 1)
 
-      expect(seen).toEqual([vcs("ws")])
+      expect(seen).toEqual([vcs("ws") as Event])
     } finally {
       app.renderer.destroy()
     }
@@ -173,7 +174,7 @@ describe("useEvent", () => {
 
       await wait(() => seen.length === 1)
 
-      expect(seen).toEqual([update("1.2.3")])
+      expect(seen).toEqual([update("1.2.3") as Event])
     } finally {
       app.renderer.destroy()
     }
